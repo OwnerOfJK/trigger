@@ -20,37 +20,51 @@ PRIVATE_KEY = os.getenv("CDP_PRIVATE_KEY", "").replace('\\n', '\n')
 # Configure CDP with environment variables
 Cdp.configure(API_KEY_NAME, PRIVATE_KEY)
 
-# Create a new wallet on the Base Sepolia testnet
-# You could make this a function for the agent to create a wallet on any network
-# If you want to use Base Mainnet, change Wallet.create() to Wallet.create(network_id="base-mainnet")
-# see https://docs.cdp.coinbase.com/mpc-wallet/docs/wallets for more information
-agent_wallet = Wallet.create()
+# Define file path to save wallet seed
+WALLET_SEED_FILE = "wallet_seed.json"
 
-# NOTE: the wallet is not currently persisted, meaning that it will be deleted after the agent is stopped. To persist the wallet, see https://docs.cdp.coinbase.com/mpc-wallet/docs/wallets#developer-managed-wallets
-# Here's an example of how to persist the wallet:
-# WARNING: This is for development only - implement secure storage in production!
+def get_or_create_wallet():
+    """
+    Load an existing wallet if the seed file exists; otherwise, create a new wallet.
+    
+    Returns:
+        Wallet: The loaded or newly created wallet.
+    """
+    if os.path.exists(WALLET_SEED_FILE):
+        print("Loading existing wallet...")
+        try:
+            # Load the wallet data from file
+            with open(WALLET_SEED_FILE, 'r') as f:
+                wallet_data = json.load(f)
+            
+            # Get the most recent wallet ID (last one in the file)
+            latest_wallet_id = list(wallet_data.keys())[-1]
+            
+            # Fetch the wallet using the ID
+            wallet = Wallet.fetch(latest_wallet_id)
+            wallet.load_seed(WALLET_SEED_FILE)
+            print(f"Loaded wallet {wallet.id} with address {wallet.default_address.address_id}")
+            return wallet
+            
+        except Exception as e:
+            print(f"Error loading existing wallet: {str(e)}")
+            print("Creating new wallet instead...")
+    
+    # Create new wallet if file doesn't exist or there was an error
+    print("Creating a new wallet...")
+    wallet = Wallet.create()
+    wallet.save_seed(WALLET_SEED_FILE, encrypt=True)
+    print(f"New wallet created with ID {wallet.id} and seed saved to {WALLET_SEED_FILE}")
+    return wallet
 
-# # Export wallet data (contains seed and wallet ID)
-# wallet_data = agent_wallet.export_data()
-# wallet_dict = wallet_data.to_dict()
-
-# # Example of saving to encrypted local file
-# file_path = "wallet_seed.json"
-# agent_wallet.save_seed(file_path, encrypt=True)
-# print(f"Seed for wallet {agent_wallet.id} saved to {file_path}")
-
-# # Example of loading a saved wallet:
-# # 1. Fetch the wallet by ID
-# fetched_wallet = Wallet.fetch(wallet_id)
-# # 2. Load the saved seed
-# fetched_wallet.load_seed("wallet_seed.json")
-
-# Example of importing previously exported wallet data:
-# imported_wallet = Wallet.import_data(wallet_dict)
+# Initialize the wallet
+agent_wallet = get_or_create_wallet()
 
 # Request funds from the faucet (only works on testnet)
-faucet = agent_wallet.faucet()
-print(f"Faucet transaction: {faucet}")
+if not os.path.exists(WALLET_SEED_FILE):
+    faucet = agent_wallet.faucet()
+    print(f"Faucet transaction: {faucet}")
+
 print(f"Agent wallet address: {agent_wallet.default_address.address_id}")
 
 
