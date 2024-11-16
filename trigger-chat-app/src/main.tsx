@@ -1,28 +1,34 @@
-import { Buffer } from "buffer";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { WagmiProvider } from "wagmi";
+import React, { Suspense } from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter as Router, useRoutes } from 'react-router-dom'
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import { MountsProvider, WagmiConfigProvider } from './components'
+import { config } from './config'
+import routes from '~react-pages'
 
-import App from "./App.tsx";
-import { config } from "./wagmi.ts";
+import '@rainbow-me/rainbowkit/styles.css'
+import 'virtual:uno.css'
+import './styles/index.css'
 
-import "./index.css";
-import { router } from "./router";
-import { RouterProvider } from "react-router-dom";
+function App() {
+  return (
+    <MountsProvider
+      install={[
+        { component: WagmiConfigProvider, props: { config } },
+        { component: RainbowKitProvider },
+      ]}
+    >
+      <Suspense fallback={<p>Loading...</p>}>
+        {useRoutes(routes)}
+      </Suspense>
+    </MountsProvider>
+  )
+}
 
-globalThis.Buffer = Buffer;
-
-const queryClient = new QueryClient();
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        {/* <App /> */}
-
-        <RouterProvider router={router} />
-      </QueryClientProvider>
-    </WagmiProvider>
-  </React.StrictMode>
-);
+    <Router>
+      <App />
+    </Router>
+  </React.StrictMode>,
+)
