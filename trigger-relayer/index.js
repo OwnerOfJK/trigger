@@ -1,6 +1,10 @@
+const { PushAPI, CONSTANTS } = require("@pushprotocol/restapi");
 const express = require("express");
 const app = express();
 const port = 3000;
+const ethers = require("ethers");
+
+require("dotenv").config();
 
 // when push protocol message is received, send it to the python backend
 // after the python backend processes the message, send a response back to the push protocol
@@ -13,72 +17,85 @@ app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 
-// Initialize stream to listen for events:
-const stream = await userAlice.initStream(
-  [
-    CONSTANTS.STREAM.CHAT, // Listen for chat messages
-    CONSTANTS.STREAM.NOTIF, // Listen for notifications
-    CONSTANTS.STREAM.CONNECT, // Listen for connection events
-    CONSTANTS.STREAM.DISCONNECT, // Listen for disconnection events
-  ],
-  {
-    // Filter options:
-    filter: {
-      // Listen to all channels and chats (default):
-      channels: ["*"],
-      chats: ["*"],
-
-      // Listen to specific channels and chats:
-      // channels: ['channel-id-1', 'channel-id-2'],
-      // chats: ['chat-id-1', 'chat-id-2'],
-
-      // Listen to events with a specific recipient:
-      // recipient: '0x...' (replace with recipient wallet address)
-    },
-    // Connection options:
-    connection: {
-      retries: 3, // Retry connection 3 times if it fails
-    },
-    raw: false, // Receive events in structured format
-  }
-);
-
-// Chat event listeners:
-
-// Stream connection established:
-stream.on(CONSTANTS.STREAM.CONNECT, async (a) => {
-  console.log("Stream Connected");
-
-  // Send initial message to PushAI Bot:
-  console.log("Sending message to PushAI Bot");
-
-  await userAlice.chat.send(pushAIWalletAddress, {
-    content: "Hello, from Alice",
-    type: "Text",
+async function listenForSigner(signer) {
+  const userAlice = await PushAPI.initialize(signer, {
+    env: CONSTANTS.ENV.DEV,
   });
 
-  console.log("Message sent to PushAI Bot");
-});
+  // Check for errors in userAlice's initialization and handle them if any
+  if (userAlice.errors.length > 0) {
+    // Handle Errors Here
+  }
 
-// Chat message received:
-stream.on(CONSTANTS.STREAM.CHAT, (message) => {
-  console.log("Encrypted Message Received");
-  console.log(message); // Log the message payload
-});
+  const stream = await userAlice.initStream([CONSTANTS.STREAM.CONNECT, CONSTANTS.STREAM.CHAT], {
+    filter: {
+      channels: ["*"],
+      chats: ["*"],
+    },
+    connection: {
+      retries: 3,
+    },
+    raw: false,
+  });
 
-// Chat operation received:
-stream.on(CONSTANTS.STREAM.CHAT_OPS, (data) => {
-  console.log("Chat operation received.");
-  console.log(data); // Log the chat operation data
-});
+  // Chat event listeners
+  stream.on(CONSTANTS.STREAM.CONNECT, async (a) => {
+    console.log("Stream Connected");
+    // Send initial message to PushAI Bot:
+    console.log("Sending message to PushAI Bot");
 
-// Connect the stream:
-await stream.connect(); // Establish the connection after setting up listeners
+    await userAlice.chat.send(process.env.CHANNEL_ID, {
+      content: "AI Agent is connected",
+      type: "Text",
+    });
 
-// Stream disconnection:
-stream.on(CONSTANTS.STREAM.DISCONNECT, () => {
-  console.log("Stream Disconnected");
-});
+    console.log("Message sent to PushAI Bot");
+  });
 
-// Stream Chat also supports other products like CONSTANTS.STREAM.NOTIF.
-// For more information, please refer to push.org/docs/notifications.
+  stream.on(CONSTANTS.STREAM.CHAT, async (message) => {
+    console.log("Encrypted Message Received");
+    console.log(message);
+
+    // ignore system messages
+    if (message.content.includes("AI Agent is connected")) {
+      return;
+    }
+
+    // ignore messages from self
+    if (message.fromDID.split(":")[1].toLowerCase() === signer.getAddress().toLowerCase()) {
+      return;
+    }
+
+    // send message to python backend
+    const response = await fetch("http://localhost:5001/api/chat", {
+      method: "POST",
+      body: JSON.stringify({ message: message.content }), //todo: attribute the sender in group chat
+    });
+
+    const data = await response.json();
+    console.log("data from python backend", data);
+
+    // send response back to push protocol
+    await userAlice.chat.send(process.env.CHANNEL_ID, {
+      content: data.content,
+      type: "Text",
+    });
+  });
+
+  // Connect the stream
+  await stream.connect();
+}
+
+// Create an async function to handle stream initialization
+async function initPushProtocolStream() {
+  // Initialize wallet user
+
+  const signer1 = new ethers.Wallet(process.env.PRIVATE_KEY_1);
+  const signer2 = new ethers.Wallet(process.env.PRIVATE_KEY_2);
+
+  listenForSigner(signer1);
+  listenForSigner(signer2);
+}
+
+// Call the async function
+initPushProtocolStream().catch(console.error);
