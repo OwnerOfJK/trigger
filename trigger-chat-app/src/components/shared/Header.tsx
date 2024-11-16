@@ -18,7 +18,9 @@ const Header: React.FC = () => {
             <Link
               to="/chat"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname.startsWith("/chat") ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-900"
+                location.pathname.startsWith("/chat")
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-500 hover:text-gray-900"
               }`}
             >
               Chats
@@ -26,7 +28,9 @@ const Header: React.FC = () => {
             <Link
               to="/profile"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname === "/profile" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-900"
+                location.pathname === "/profile"
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-500 hover:text-gray-900"
               }`}
             >
               Profile

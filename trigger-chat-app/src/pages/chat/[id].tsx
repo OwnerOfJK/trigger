@@ -6,7 +6,7 @@ interface Message {
   // Add other message properties as needed
 }
 
-const ChatRoom = () => {
+function ChatRoom() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const handleSendMessage = (message: string) => {
@@ -26,6 +26,6 @@ const ChatRoom = () => {
       {/* Your message input component */}
     </div>
   );
-};
+}
 
 export default ChatRoom;
