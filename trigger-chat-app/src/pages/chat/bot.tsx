@@ -25,24 +25,22 @@ function ChatbotPage() {
   };
 
   return (
-    <div className="flex h-screen">
-      <div className="flex flex-col h-full bg-gray-50">
-        <div className="flex-1 overflow-y-auto p-4">
-          <MessageList messages={messages} />
-        </div>
-        <div className="bg-white border-t p-4">
-          <ChatInput onSend={handleSendMessage} disabled={isLoading} />
-          {isConnected && (
-            <div className="mt-2 flex justify-end">
-              <button
-                onClick={handleTransfer}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-              >
-                Pay
-              </button>
-            </div>
-          )}
-        </div>
+    <div className="flex flex-col h-full bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <MessageList messages={messages} />
+      </div>
+      <div className="bg-white border-t p-4">
+        <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        {isConnected && (
+          <div className="mt-2 flex justify-end">
+            <button
+              onClick={handleTransfer}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            >
+              Pay
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

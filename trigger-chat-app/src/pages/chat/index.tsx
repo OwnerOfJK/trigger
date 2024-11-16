@@ -10,10 +10,8 @@ import { usePushChat } from "@/components/utils/ChatProvider";
 const ChatbotChatRoom = {
   id: "bot",
   name: "Talk to Chatbot",
-  lastMessage: "Hello everyone!",
   lastActivityAt: new Date().toISOString(),
   participantsCount: 1,
-  unreadCount: 3,
   avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
 
   type: "bot",
@@ -41,6 +39,7 @@ const Chat: React.FC = () => {
           name: chat.groupInformation?.groupName,
           participantsCount: chat.groupInformation?.members.length,
           avatarUrl: chat.groupInformation?.groupImage,
+          lastActivityAt: chat.intentTimestamp,
         };
       });
 
@@ -95,12 +94,12 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Chat Rooms List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col">
         {conversations?.map((room) => (
           <div
             key={room.id}
             onClick={() => handleRoomClick(room.id)}
-            className="flex inline-flex w-full items-center px-4 py-3 space-x-4 bg-white hover:bg-gray-50 cursor-pointer border-b transition-colors"
+            className="flex inline-flex items-center px-4 py-3 space-x-4 bg-white hover:bg-gray-50 cursor-pointer border-b border-gray-200 transition-colors"
           >
             {/* Avatar */}
             <img
