@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useAccount } from "wagmi";
+import { withLayout } from "../layout";
+import { getEthersContract } from "wagmi-ethers-adapters/ethers-v5";
 
 interface Message {
   id: string;
@@ -14,6 +17,13 @@ interface Message {
 
 function ChatRoom() {
   // Mock data for initial messages
+  const { address, isConnected } = useAccount();
+  async function transfer() {
+    const erc20 = getEthersContract(contracts.ERC20);
+    const transaction = await erc20.transfer(address!, 0);
+    await transaction.wait();
+  }
+
   const mockMessages: Message[] = [
     {
       id: "1",
@@ -159,6 +169,10 @@ function ChatRoom() {
           >
             Send
           </button>
+
+          <div className="flex-center mt-12px">
+            <button onClick={transfer}>Pay</button>
+          </div>
         </div>
       </form>
     </div>
