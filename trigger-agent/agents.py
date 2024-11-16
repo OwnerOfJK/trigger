@@ -20,53 +20,40 @@ PRIVATE_KEY = os.getenv("CDP_PRIVATE_KEY", "").replace('\\n', '\n')
 # Configure CDP with environment variables
 Cdp.configure(API_KEY_NAME, PRIVATE_KEY)
 
-# Define file path to save wallet seed
-WALLET_SEED_FILE = "wallet_seed.json"
-
-def get_or_create_wallet():
+def get_or_create_wallet(path_file):
     """
     Load an existing wallet if the seed file exists; otherwise, create a new wallet.
     
     Returns:
         Wallet: The loaded or newly created wallet.
     """
-    if os.path.exists(WALLET_SEED_FILE):
+    if os.path.exists(f"{path_file}.json"):
         print("Loading existing wallet...")
         try:
-            # Load the wallet data from file
-            with open(WALLET_SEED_FILE, 'r') as f:
+            with open(f"{path_file}.json", 'r') as f:
                 wallet_data = json.load(f)
-            
-            # Get the most recent wallet ID (last one in the file)
             latest_wallet_id = list(wallet_data.keys())[-1]
-            
-            # Fetch the wallet using the ID
             wallet = Wallet.fetch(latest_wallet_id)
-            wallet.load_seed(WALLET_SEED_FILE)
-            print(f"Loaded wallet {wallet.id} with address {wallet.default_address.address_id}")
+            wallet.load_seed(f"{path_file}.json")
+            print(f"Loaded wallet {wallet.id}")
             return wallet
             
         except Exception as e:
             print(f"Error loading existing wallet: {str(e)}")
             print("Creating new wallet instead...")
     
-    # Create new wallet if file doesn't exist or there was an error
     print("Creating a new wallet...")
     wallet = Wallet.create()
-    wallet.save_seed(WALLET_SEED_FILE, encrypt=True)
-    print(f"New wallet created with ID {wallet.id} and seed saved to {WALLET_SEED_FILE}")
+    wallet.save_seed(f"{path_file}.json", encrypt=False)
+    
+    # Request funds from faucet for new wallets
+    # faucet = wallet.faucet()
+    # print(f"Faucet transaction: {faucet}")
+    
     return wallet
 
-# Initialize the wallet
-agent_wallet = get_or_create_wallet()
-
-# Request funds from the faucet (only works on testnet)
-if not os.path.exists(WALLET_SEED_FILE):
-    faucet = agent_wallet.faucet()
-    print(f"Faucet transaction: {faucet}")
-
-print(f"Agent wallet address: {agent_wallet.default_address.address_id}")
-
+# Add at the beginning of agents.py after configuration
+agent_wallet = get_or_create_wallet("agent_wallet")
 
 # Function to create a new ERC-20 token
 def create_token(name, symbol, initial_supply):
