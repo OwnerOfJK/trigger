@@ -1,44 +1,30 @@
-import type { FunctionComponent, PropsWithChildren } from 'react'
-import viteLogo from '/vite.svg'
-import reactLogo from '../assets/react.svg'
-import './index.css'
+import type { FunctionComponent, PropsWithChildren } from "react";
+import viteLogo from "/vite.svg";
+import reactLogo from "../assets/react.svg";
+import "./index.css";
+import Header from "@/components/shared/Header";
 
 export function Layout(props: PropsWithChildren) {
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h2>Vite + React + Wagmi + Rainbowkit</h2>
-      <div className="card">
-        {props.children}
-        <p>
-          Edit
-          {' '}
-          <code>src/App.tsx</code>
-          {' '}
-          and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen w-full flex flex-col">
+      <Header />
+      <div>{props.children}</div>
+    </div>
+  );
 }
 
-export function withLayout<T extends FunctionComponent<any>>(Component: T, Custom?: FunctionComponent) {
+export function withLayout<T extends FunctionComponent<any>>(
+  Component: T,
+  Custom?: FunctionComponent
+) {
   function Wither(props: any) {
     return (
       <Layout>
-        <Component {...props} />
+        <main className="flex-1">
+          <Component {...props} />
+        </main>
       </Layout>
-    )
+    );
   }
-  return Custom || Wither
+  return Custom || Wither;
 }

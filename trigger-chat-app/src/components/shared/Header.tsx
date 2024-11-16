@@ -1,8 +1,11 @@
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAccount } from "wagmi";
 
 const Header: React.FC = () => {
   const location = useLocation();
+  const { address, isConnected } = useAccount();
 
   return (
     <header className="bg-white border-b shadow-sm">
@@ -35,6 +38,8 @@ const Header: React.FC = () => {
             >
               Profile
             </Link>
+
+            <ConnectButton />
           </nav>
         </div>
       </div>

@@ -1,20 +1,91 @@
-import React from "react";
+import { withLayout } from "@/layout";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface ChatRoom {
-  id: string;
-  name: string;
-  lastMessage?: string;
-  lastActivityAt: string;
-  participantsCount: number;
-  unreadCount?: number;
-  avatarUrl?: string;
-}
+import {
+  Client,
+  type Signer,
+  type Conversation,
+  DecodedMessage,
+} from "@xmtp/browser-sdk";
+import { ChatRoom } from "@/types/chat";
+import { useAccount } from "wagmi";
 
 const Chat: React.FC = () => {
   const navigate = useNavigate();
+
+  const [client, setClient] = React.useState<Client | null>(null);
+
+  const [conversations, setConversations] = React.useState<Conversation[]>([]);
+  const [messages, setMessages] = React.useState<Map<string, DecodedMessage[]>>(
+    new Map()
+  );
+
+  const aaSigner: Signer = {
+    getAddress: () => accountAddress,
+    signMessage: async (message) => {
+      // return value from a signing method here
+    },
+    // these methods are required for smart contract wallets
+    // block number is optional
+    getBlockNumber: () => undefined,
+    // this example uses the Base chain
+    getChainId: () => BigInt(8453),
+  };
+
+  // this value should be generated once per installation and stored securely
+  const encryptionKey = window.crypto.getRandomValues(new Uint8Array(32));
+  console.log("encryptionKey", encryptionKey);
+
+  const { address: accountAddress } = useAccount();
+
+  useEffect(() => {
+    const setup = async () => {
+      if (!accountAddress) return;
+
+      const signer: Signer = {
+        getAddress: () => accountAddress,
+        signMessage: async (message) => {
+          // return value from a signing method here
+        },
+      };
+
+      const c = await Client.create(
+        signer,
+        encryptionKey
+        // options /* optional */
+      );
+      setClient(c);
+    };
+    setup();
+  }, [accountAddress]);
+
+  const handleListGroups = async () => {
+    if (client) {
+      const groups = await client.conversations.list();
+      setConversations(groups);
+    }
+  };
+
+  useEffect(() => {
+    handleListGroups();
+  }, [client]);
+
   // This would typically come from an API
   const chatRooms: ChatRoom[] = [
+    {
+      id: "1",
+      name: "Chatbot",
+      lastMessage: "Hello everyone!",
+      lastActivityAt: new Date().toISOString(),
+      participantsCount: 5,
+      unreadCount: 3,
+      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+
+      type: "bot",
+      botId: "1",
+      botAvatarUrl:
+        "https://ui-avatars.com/api/?name=General&background=random",
+    },
     {
       id: "1",
       name: "General",
@@ -23,22 +94,36 @@ const Chat: React.FC = () => {
       participantsCount: 5,
       unreadCount: 3,
       avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+      groupAvatarUrl:
+        "https://ui-avatars.com/api/?name=General&background=random",
+      type: "group",
+      members: ["0x...", "0x..."],
     },
     {
-      id: "2",
-      name: "Project Alpha",
-      lastMessage: "The meeting is scheduled for tomorrow",
-      lastActivityAt: new Date(Date.now() - 3600000).toISOString(),
-      participantsCount: 8,
-      unreadCount: 0,
-      avatarUrl:
-        "https://ui-avatars.com/api/?name=Project+Alpha&background=random",
+      id: "1",
+      name: "General",
+      lastMessage: "Hello everyone!",
+      lastActivityAt: new Date().toISOString(),
+      participantsCount: 5,
+      unreadCount: 3,
+      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+      type: "individual",
+      userId: "0x...",
     },
+
     // Add more rooms as needed
   ];
 
   const handleRoomClick = (roomId: string) => {
-    navigate(`/chat/room?id=${roomId}`);
+    navigate(`/chat/${roomId}`);
+  };
+
+  const createNewChat = async (address: string) => {
+    if (client) {
+      const group = await client.conversations.newDm(address);
+      await group.sync();
+      await handleListGroups();
+    }
   };
 
   const formatLastActivity = (date: string) => {
@@ -123,4 +208,4 @@ const Chat: React.FC = () => {
   );
 };
 
-export default Chat;
+export default withLayout(Chat);
