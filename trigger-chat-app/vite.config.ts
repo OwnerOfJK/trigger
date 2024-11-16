@@ -8,9 +8,6 @@ import envParsing from "unplugin-env-parsing/vite";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   return {
-    optimizeDeps: {
-      exclude: ["@xmtp/user-preferences-bindings-wasm"],
-    },
     resolve: {
       alias: {
         "@": path.resolve("src"),

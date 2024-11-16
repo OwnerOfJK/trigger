@@ -9,8 +9,10 @@ export interface BaseChatRoom {
   id: string;
   name: string;
   lastMessage?: string;
-  lastMessageTime?: Date;
+  lastActivityAt: string;
+  participantsCount: number;
   unreadCount?: number;
+  avatarUrl?: string;
 }
 
 export interface UserChatRoom extends BaseChatRoom {
