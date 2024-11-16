@@ -10,9 +10,9 @@ import Header from "@/components/shared/Header";
 
 export function Layout(props: PropsWithChildren) {
   return (
-    <div className="min-h-screen w-full flex flex-col">
+    <div className="h-full w-full flex flex-col h-screen">
       <Header />
-      <div>{props.children}</div>
+      {props.children}
     </div>
   );
 }
@@ -24,7 +24,7 @@ export function withLayout<T extends FunctionComponent<any>>(
   function Wither(props: any) {
     return (
       <Layout>
-        <main className="flex-1">
+        <main className="flex-1 overflow-auto">
           <Component {...props} />
         </main>
       </Layout>
