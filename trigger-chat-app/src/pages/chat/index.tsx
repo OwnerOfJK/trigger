@@ -38,7 +38,7 @@ const Chat: React.FC = () => {
   ];
 
   const handleRoomClick = (roomId: string) => {
-    navigate(`/chat/${roomId}`);
+    navigate(`/chat/room?id=${roomId}`);
   };
 
   const formatLastActivity = (date: string) => {
