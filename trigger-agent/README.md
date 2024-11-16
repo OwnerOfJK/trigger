@@ -14,6 +14,8 @@ Personal AI Assistant functioning inside Trigger.
 - Python 3.7+
 - `pip install cdp-sdk`
 - `pip install openai`
+- `pip install git+ssh://git@github.com/openai/swarm.git`
+- `pip install python-dotenv`
 
 ### API Configuration
 Add your secrets to Replit's Secret Manager or set them as environment variables:
