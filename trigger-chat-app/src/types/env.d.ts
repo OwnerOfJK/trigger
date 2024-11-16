@@ -12,9 +12,9 @@ declare global {
       readonly 'STARSHIP_SHELL': string
       readonly 'TERM_PROGRAM': string
       readonly 'NODE': string
+      readonly 'INIT_CWD': string
       readonly 'NVM_CD_FLAGS': string
       readonly '_P9K_TTY': string
-      readonly 'INIT_CWD': string
       readonly 'SHELL': string
       readonly 'TERM': string
       readonly 'TMPDIR': string
@@ -28,19 +28,18 @@ declare global {
       readonly 'NVM_DIR': string
       readonly 'LS_COLORS': string
       readonly 'COMMAND_MODE': string
-      readonly 'PNPM_SCRIPT_SRC_DIR': string
       readonly 'SSH_AUTH_SOCK': string
       readonly '__CF_USER_TEXT_ENCODING': string
       readonly 'PAGER': string
       readonly 'LSCOLORS': string
       readonly 'PATH': string
+      readonly '_': string
       readonly '__CFBundleIdentifier': string
       readonly 'USER_ZDOTDIR': string
       readonly 'PWD': string
       readonly 'P9K_SSH': number
       readonly 'LANG': string
       readonly 'P9K_TTY': string
-      readonly 'NODE_PATH': string
       readonly 'XPC_FLAGS': string
       readonly 'XPC_SERVICE_NAME': number
       readonly 'HOME': string
@@ -49,6 +48,7 @@ declare global {
       readonly 'LOGNAME': string
       readonly 'LESS': string
       readonly 'STARSHIP_SESSION_KEY': number
+      readonly 'YARN_WRAP_OUTPUT': boolean
       readonly 'NVM_BIN': string
       readonly 'HOMEBREW_CELLAR': string
       readonly 'INFOPATH': string

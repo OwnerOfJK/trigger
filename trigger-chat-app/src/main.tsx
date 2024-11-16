@@ -9,6 +9,7 @@ import routes from "~react-pages";
 import "@rainbow-me/rainbowkit/styles.css";
 import "virtual:uno.css";
 import "./styles/index.css";
+import { ChatProvider } from "@/components/utils/ChatProvider";
 
 function App() {
   return (
@@ -18,7 +19,9 @@ function App() {
         { component: RainbowKitProvider },
       ]}
     >
-      <Suspense fallback={<p>Loading...</p>}>{useRoutes(routes)}</Suspense>
+      <ChatProvider>
+        <Suspense fallback={<p>Loading...</p>}>{useRoutes(routes)}</Suspense>
+      </ChatProvider>
     </MountsProvider>
   );
 }

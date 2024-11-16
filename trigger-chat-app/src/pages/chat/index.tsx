@@ -4,122 +4,58 @@ import { useNavigate } from "react-router-dom";
 // import { ChatRoom } from "@/types/chat";
 import { useAccount, useSignMessage } from "wagmi";
 import { ChatRoom } from "@/components/chat/ChatRoom";
+import { useChat } from "@/hooks";
+import { usePushChat } from "@/components/utils/ChatProvider";
+
+const ChatbotChatRoom = {
+  id: "bot",
+  name: "Talk to Chatbot",
+  lastActivityAt: new Date().toISOString(),
+  participantsCount: 1,
+  avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+
+  type: "bot",
+  botId: "1",
+  botAvatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+};
 
 const Chat: React.FC = () => {
   const navigate = useNavigate();
 
-  const [client, setClient] = React.useState<Client | null>(null);
+  const { pushUser, isLoading } = usePushChat();
 
-  const [conversations, setConversations] = React.useState<Conversation[]>([]);
-  const [messages, setMessages] = React.useState<Map<string, DecodedMessage[]>>(
-    new Map()
-  );
-
-  const { signMessageAsync } = useSignMessage();
-  const aaSigner: Signer = {
-    getAddress: () => accountAddress,
-    signMessage: async (message: string) => {
-      return signMessageAsync({ message });
-    },
-    // these methods are required for smart contract wallets
-    // block number is optional
-    getBlockNumber: () => undefined,
-    // this example uses the Base chain
-    getChainId: () => BigInt(8453),
-  };
-
-  // this value should be generated once per installation and stored securely
-  const encryptionKey = window.crypto.getRandomValues(new Uint8Array(32));
-  console.log("encryptionKey", encryptionKey);
-
-  const { address: accountAddress } = useAccount();
+  const [conversations, setConversations] = React.useState<ChatRoom[]>([
+    ChatbotChatRoom,
+  ]);
 
   useEffect(() => {
-    const setup = async () => {
-      if (!accountAddress) return;
+    (async () => {
+      const list = await pushUser?.chat.list("CHATS");
 
-      const signer: Signer = {
-        getAddress: () => accountAddress,
-        signMessage: async (message) => {
-          // return value from a signing method here
-        },
-      };
+      console.log("list", list);
+      const rooms = list?.map((chat) => {
+        return {
+          id: chat.chatId,
+          name: chat.groupInformation?.groupName,
+          participantsCount: chat.groupInformation?.members.length,
+          avatarUrl: chat.groupInformation?.groupImage,
+          lastActivityAt: chat.intentTimestamp,
+        };
+      });
 
-      const c = await Client.create(
-        signer,
-        encryptionKey
-        // options /* optional */
-      );
-      setClient(c);
-    };
-    setup();
-  }, [accountAddress]);
+      console.log("rooms", rooms);
+      if (rooms) {
+        setConversations([ChatbotChatRoom, ...rooms]);
+      }
 
-  const handleListGroups = async () => {
-    if (client) {
-      const groups = await client.conversations.list();
-      setConversations(groups);
-    }
-  };
-
-  useEffect(() => {
-    handleListGroups();
-  }, [client]);
+      console.log("list", list);
+    })();
+  }, [pushUser]);
 
   // This would typically come from an API
-  const chatRooms: ChatRoom[] = [
-    {
-      id: "bot",
-      name: "Talk to Chatbot",
-      lastMessage: "Hello everyone!",
-      lastActivityAt: new Date().toISOString(),
-      participantsCount: 5,
-      unreadCount: 3,
-      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
-
-      type: "bot",
-      botId: "1",
-      botAvatarUrl:
-        "https://ui-avatars.com/api/?name=General&background=random",
-    },
-    {
-      id: "1",
-      name: "General",
-      lastMessage: "Hello everyone!",
-      lastActivityAt: new Date().toISOString(),
-      participantsCount: 5,
-      unreadCount: 3,
-      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
-      groupAvatarUrl:
-        "https://ui-avatars.com/api/?name=General&background=random",
-      type: "group",
-      members: ["0x...", "0x..."],
-    },
-    {
-      id: "1",
-      name: "General",
-      lastMessage: "Hello everyone!",
-      lastActivityAt: new Date().toISOString(),
-      participantsCount: 5,
-      unreadCount: 3,
-      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
-      type: "individual",
-      userId: "0x...",
-    },
-
-    // Add more rooms as needed
-  ];
 
   const handleRoomClick = (roomId: string) => {
     navigate(`/chat/${roomId}`);
-  };
-
-  const createNewChat = async (address: string) => {
-    if (client) {
-      const group = await client.conversations.newDm(address);
-      await group.sync();
-      await handleListGroups();
-    }
   };
 
   const formatLastActivity = (date: string) => {
@@ -134,19 +70,14 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-800">Messages</h1>
-      </div>
-
+    <div className="w-full flex flex-col bg-gray-50 flex-1 h-full">
       {/* Chat Rooms List */}
-      <div className="flex-1 overflow-y-auto">
-        {chatRooms.map((room) => (
+      <div className="flex-1 flex flex-col overflow-auto">
+        {conversations?.map((room) => (
           <div
             key={room.id}
             onClick={() => handleRoomClick(room.id)}
-            className="flex inline-flex w-full items-center px-4 py-3 space-x-4 bg-white hover:bg-gray-50 cursor-pointer border-b transition-colors"
+            className="flex inline-flex items-center px-4 py-3 space-x-4 bg-white hover:bg-gray-50 cursor-pointer border-b border-gray-200 transition-colors"
           >
             {/* Avatar */}
             <img
@@ -182,7 +113,7 @@ const Chat: React.FC = () => {
 
       {/* FAB - Floating Action Button */}
       <button
-        onClick={() => navigate("/chat/new")}
+        onClick={() => navigate("/chat/create")}
         className="fixed right-6 bottom-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors"
       >
         <svg

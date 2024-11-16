@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { withLayout } from "../layout";
 import { getEthersContract } from "wagmi-ethers-adapters/ethers-v5";
+import { usePushChat } from "@/components/utils/ChatProvider";
+import { contracts } from "@/config";
+import React from "react";
+import { useParams } from "react-router";
+import { useEffect } from "react";
+import { useCallback } from "react";
+import { withLayout } from "@/layout";
 
 interface Message {
   id: string;
@@ -17,97 +23,78 @@ interface Message {
 
 function ChatRoom() {
   // Mock data for initial messages
+  const { id } = useParams();
   const { address, isConnected } = useAccount();
+
+  const { pushUser } = usePushChat();
   async function transfer() {
     const erc20 = getEthersContract(contracts.ERC20);
     const transaction = await erc20.transfer(address!, 0);
     await transaction.wait();
   }
 
-  const mockMessages: Message[] = [
-    {
-      id: "1",
-      content: "Hey team, how's the progress on the new feature?",
-      sender: {
-        id: "user1",
-        name: "John Doe",
-        avatar: "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC",
-      },
-      timestamp: new Date(Date.now() - 3600000 * 2), // 2 hours ago
-      status: "read",
-    },
-    {
-      id: "2",
-      content:
-        "We've completed the frontend part, just working on API integration now.",
-      sender: {
-        id: "user2",
-        name: "Sarah Smith",
-        avatar:
-          "https://ui-avatars.com/api/?name=Sarah+Smith&background=FF4B91",
-      },
-      timestamp: new Date(Date.now() - 3600000), // 1 hour ago
-      status: "read",
-    },
-    {
-      id: "3",
-      content: "Great progress! Any blockers we should know about?",
-      sender: {
-        id: "user1",
-        name: "John Doe",
-        avatar: "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC",
-      },
-      timestamp: new Date(Date.now() - 1800000), // 30 mins ago
-      status: "read",
-    },
-    {
-      id: "4",
-      content:
-        "No blockers at the moment. We should be able to deliver by EOD.",
-      sender: {
-        id: "user3",
-        name: "Mike Johnson",
-        avatar:
-          "https://ui-avatars.com/api/?name=Mike+Johnson&background=7A3E3E",
-      },
-      timestamp: new Date(Date.now() - 900000), // 15 mins ago
-      status: "delivered",
-    },
-    {
-      id: "5",
-      content: "Perfect! Let's review it in tomorrow's standup 👍",
-      sender: {
-        id: "user1",
-        name: "John Doe",
-        avatar: "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC",
-      },
-      timestamp: new Date(Date.now() - 300000), // 5 mins ago
-      status: "sent",
-    },
-  ];
-
-  const [messages, setMessages] = useState<Message[]>(mockMessages);
-  const [newMessage, setNewMessage] = useState("");
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
-
-    const message: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender: {
-        id: "user1", // Current user
-        name: "John Doe",
-        avatar: "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC",
-      },
-      timestamp: new Date(),
-      status: "sent",
+  useEffect(() => {
+    const fetchHistory = async () => {
+      console.log("id", id, pushUser);
+      const history = await pushUser?.chat.history(id);
+      console.log("history", history);
+      const messages = history.map((hi) => {
+        return {
+          id: hi.messageObj.cid,
+          content: hi.messageObj.content,
+          sender: {
+            id: hi.fromDID,
+            name: hi.fromDID,
+            avatar: `https://ui-avatars.com/api/?name=${hi.fromDID
+              .split(":")[1]
+              .slice(2, 4)}&background=0D8ABC`,
+          },
+          timestamp: new Date(hi.timestamp),
+          status: "sent",
+        };
+      });
+      setMessages(messages);
     };
 
-    setMessages((prev) => [...prev, message]);
-    setNewMessage("");
+    fetchHistory();
+  }, [id, pushUser]);
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+
+  const isCurrentUser = (id: string) => {
+    return id.split(":")[1] === pushUser?.account;
   };
+
+  const handleSendMessage = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newMessage.trim()) return;
+
+      const message1 = await pushUser?.chat.send(id, {
+        type: "Text",
+        content: newMessage,
+      });
+
+      console.log("message", message1, pushUser);
+
+      const message: Message = {
+        id: Date.now().toString(),
+        content: newMessage,
+        sender: {
+          id: "user1", // Current user
+          name: "John Doe",
+          avatar: "https://ui-avatars.com/api/?name=You&background=0D8ABC",
+        },
+        timestamp: new Date(),
+        status: "sent",
+      };
+
+      setMessages((prev) => [...prev, message]);
+      setNewMessage("");
+    },
+    [id, newMessage, pushUser]
+  ); // Add dependencies used inside the callback
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -117,7 +104,7 @@ function ChatRoom() {
           <div
             key={message.id}
             className={`flex items-start gap-2 ${
-              message.sender.id === "user1" ? "flex-row-reverse" : ""
+              !isCurrentUser(message.sender.id) ? "flex-row-reverse" : ""
             }`}
           >
             <img
@@ -127,7 +114,7 @@ function ChatRoom() {
             />
             <div
               className={`max-w-[70%] rounded-lg p-3 ${
-                message.sender.id === "user1"
+                !isCurrentUser(message.sender.id)
                   ? "bg-blue-500 text-white"
                   : "bg-white text-gray-800"
               }`}
@@ -138,7 +125,7 @@ function ChatRoom() {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
-                {message.sender.id === "user1" && (
+                {!isCurrentUser(message.sender.id) && (
                   <span>
                     {message.status === "read"
                       ? "✓✓"
@@ -179,4 +166,4 @@ function ChatRoom() {
   );
 }
 
-export default ChatRoom;
+export default withLayout(ChatRoom);

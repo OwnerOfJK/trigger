@@ -8,17 +8,17 @@ const Header: React.FC = () => {
   const { address, isConnected } = useAccount();
 
   return (
-    <header className="bg-white border-b shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <header className="bg-blue-100 border-b shadow-sm w-full">
+      <div className="px-4">
+        <div className="flex justify-between items-center h-16 flex-1">
           <div className="flex items-center">
-            <Link to="/" className="text-xl font-bold text-gray-800">
-              TriggerChat
+            <Link to="/chat" className="text-xl font-bold text-gray-800">
+              Trigger
             </Link>
           </div>
 
-          <nav className="flex space-x-4">
-            <Link
+          <nav className="flex  ">
+            {/* <Link
               to="/chat"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname.startsWith("/chat")
@@ -37,7 +37,7 @@ const Header: React.FC = () => {
               }`}
             >
               Profile
-            </Link>
+            </Link> */}
 
             <ConnectButton />
           </nav>
