@@ -1,5 +1,6 @@
 # App-specific files
 wallet_seed.json
+wallet_seed*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
