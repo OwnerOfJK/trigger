@@ -54,7 +54,7 @@ function CreateGroup() {
       });
 
       console.log({ pushUser, res });
-      // navigate("/chat");
+      navigate("/chat");
     } catch (error) {
       console.error("Failed to create group:", error);
     }

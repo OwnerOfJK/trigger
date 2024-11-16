@@ -8,6 +8,7 @@ import { useParams } from "react-router";
 import { useEffect } from "react";
 import { useCallback } from "react";
 import { withLayout } from "@/layout";
+import { CONSTANTS } from "@pushprotocol/restapi";
 
 interface Message {
   id: string;
@@ -57,6 +58,40 @@ function ChatRoom() {
     };
 
     fetchHistory();
+
+    const fetchLatest = async () => {
+      const stream = await pushUser?.initStream([CONSTANTS.STREAM.CHAT], {
+        filter: {
+          channels: ["*"],
+          chats: ["*"],
+        },
+        connection: {
+          retries: 3,
+        },
+        raw: false,
+      });
+
+      stream.on(CONSTANTS.STREAM.CHAT, async (event) => {
+        console.log("event", event);
+        const message = {
+          id: event.message.cid,
+          content: event.messageObj.content,
+          sender: {
+            id: event.from,
+            name: event.from,
+            avatar: `https://ui-avatars.com/api/?name=${event.from
+              .split(":")[1]
+              .slice(2, 4)}&background=0D8ABC`,
+          },
+          timestamp: new Date(event.timestamp),
+          status: "sent",
+        };
+
+        setMessages((prev) => [...prev, message]);
+      });
+    };
+
+    fetchLatest();
   }, [id, pushUser]);
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -82,15 +117,15 @@ function ChatRoom() {
         id: Date.now().toString(),
         content: newMessage,
         sender: {
-          id: "user1", // Current user
-          name: "John Doe",
+          id: pushUser?.account, // Current user
+          name: pushUser?.account,
           avatar: "https://ui-avatars.com/api/?name=You&background=0D8ABC",
         },
         timestamp: new Date(),
         status: "sent",
       };
 
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => [message, ...prev]);
       setNewMessage("");
     },
     [id, newMessage, pushUser]
@@ -104,7 +139,7 @@ function ChatRoom() {
           <div
             key={message.id}
             className={`flex items-start gap-2 ${
-              !isCurrentUser(message.sender.id) ? "flex-row-reverse" : ""
+              isCurrentUser(message.sender.id) ? "flex-row-reverse" : ""
             }`}
           >
             <img
@@ -114,7 +149,7 @@ function ChatRoom() {
             />
             <div
               className={`max-w-[70%] rounded-lg p-3 ${
-                !isCurrentUser(message.sender.id)
+                isCurrentUser(message.sender.id)
                   ? "bg-blue-500 text-white"
                   : "bg-white text-gray-800"
               }`}
@@ -125,7 +160,7 @@ function ChatRoom() {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
-                {!isCurrentUser(message.sender.id) && (
+                {isCurrentUser(message.sender.id) && (
                   <span>
                     {message.status === "read"
                       ? "✓✓"
