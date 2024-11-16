@@ -4,13 +4,32 @@ import { useNavigate } from "react-router-dom";
 // import { ChatRoom } from "@/types/chat";
 import { useAccount, useSignMessage } from "wagmi";
 import { ChatRoom } from "@/components/chat/ChatRoom";
+import { useChat } from "@/hooks";
+import { usePushChat } from "@/components/utils/ChatProvider";
+
+const ChatbotChatRoom = {
+  id: "bot",
+  name: "Talk to Chatbot",
+  lastMessage: "Hello everyone!",
+  lastActivityAt: new Date().toISOString(),
+  participantsCount: 5,
+  unreadCount: 3,
+  avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+
+  type: "bot",
+  botId: "1",
+  botAvatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
+};
 
 const Chat: React.FC = () => {
   const navigate = useNavigate();
 
-  const [client, setClient] = React.useState<Client | null>(null);
+  const { pushUser, isLoading } = usePushChat();
 
-  const [conversations, setConversations] = React.useState<Conversation[]>([]);
+  const [conversations, setConversations] = React.useState<ChatRoom[]>([
+    ChatbotChatRoom,
+  ]);
+
   const [messages, setMessages] = React.useState<Map<string, DecodedMessage[]>>(
     new Map()
   );
@@ -35,91 +54,19 @@ const Chat: React.FC = () => {
   const { address: accountAddress } = useAccount();
 
   useEffect(() => {
-    const setup = async () => {
-      if (!accountAddress) return;
+    const list = pushUser?.chat.list("CHATS");
+    list?.then((res) => {
+      console.log("res", res);
+    });
 
-      const signer: Signer = {
-        getAddress: () => accountAddress,
-        signMessage: async (message) => {
-          // return value from a signing method here
-        },
-      };
-
-      const c = await Client.create(
-        signer,
-        encryptionKey
-        // options /* optional */
-      );
-      setClient(c);
-    };
-    setup();
-  }, [accountAddress]);
-
-  const handleListGroups = async () => {
-    if (client) {
-      const groups = await client.conversations.list();
-      setConversations(groups);
-    }
-  };
-
-  useEffect(() => {
-    handleListGroups();
-  }, [client]);
+    setConversations(list);
+    console.log("list", list);
+  }, [pushUser]);
 
   // This would typically come from an API
-  const chatRooms: ChatRoom[] = [
-    {
-      id: "bot",
-      name: "Talk to Chatbot",
-      lastMessage: "Hello everyone!",
-      lastActivityAt: new Date().toISOString(),
-      participantsCount: 5,
-      unreadCount: 3,
-      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
-
-      type: "bot",
-      botId: "1",
-      botAvatarUrl:
-        "https://ui-avatars.com/api/?name=General&background=random",
-    },
-    {
-      id: "1",
-      name: "General",
-      lastMessage: "Hello everyone!",
-      lastActivityAt: new Date().toISOString(),
-      participantsCount: 5,
-      unreadCount: 3,
-      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
-      groupAvatarUrl:
-        "https://ui-avatars.com/api/?name=General&background=random",
-      type: "group",
-      members: ["0x...", "0x..."],
-    },
-    {
-      id: "1",
-      name: "General",
-      lastMessage: "Hello everyone!",
-      lastActivityAt: new Date().toISOString(),
-      participantsCount: 5,
-      unreadCount: 3,
-      avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
-      type: "individual",
-      userId: "0x...",
-    },
-
-    // Add more rooms as needed
-  ];
 
   const handleRoomClick = (roomId: string) => {
     navigate(`/chat/${roomId}`);
-  };
-
-  const createNewChat = async (address: string) => {
-    if (client) {
-      const group = await client.conversations.newDm(address);
-      await group.sync();
-      await handleListGroups();
-    }
   };
 
   const formatLastActivity = (date: string) => {
@@ -136,13 +83,30 @@ const Chat: React.FC = () => {
   return (
     <div className="h-screen w-full flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-800">Messages</h1>
+
+      <div className="bg-white shadow px-4 py-6 flex justify-between items-center">
+        <h3 className="text-2xl font-bold text-gray-800">Messages</h3>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate("/chat/create")}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+            </svg>
+            Create Group
+          </button>
+        </div>
       </div>
 
       {/* Chat Rooms List */}
       <div className="flex-1 overflow-y-auto">
-        {chatRooms.map((room) => (
+        {conversations?.map((room) => (
           <div
             key={room.id}
             onClick={() => handleRoomClick(room.id)}
@@ -182,7 +146,7 @@ const Chat: React.FC = () => {
 
       {/* FAB - Floating Action Button */}
       <button
-        onClick={() => navigate("/chat/new")}
+        onClick={() => navigate("/chat/create")}
         className="fixed right-6 bottom-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors"
       >
         <svg

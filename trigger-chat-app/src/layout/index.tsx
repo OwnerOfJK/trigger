@@ -1,15 +1,21 @@
-import type { FunctionComponent, PropsWithChildren } from "react";
-import viteLogo from "/vite.svg";
-import reactLogo from "../assets/react.svg";
+import {
+  useEffect,
+  useState,
+  type FunctionComponent,
+  type PropsWithChildren,
+} from "react";
+
 import "./index.css";
 import Header from "@/components/shared/Header";
-
+import { ChatProvider } from "@/components/utils/ChatProvider";
 export function Layout(props: PropsWithChildren) {
   return (
-    <div className="min-h-screen w-full flex flex-col">
-      <Header />
-      <div>{props.children}</div>
-    </div>
+    <ChatProvider>
+      <div className="min-h-screen w-full flex flex-col">
+        <Header />
+        <div>{props.children}</div>
+      </div>
+    </ChatProvider>
   );
 }
 

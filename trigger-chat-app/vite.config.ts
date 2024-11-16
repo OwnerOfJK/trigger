@@ -8,6 +8,14 @@ import envParsing from "unplugin-env-parsing/vite";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   return {
+    optimizeDeps: {
+      esbuildOptions: {
+        // Node.js global to browser globalThis
+        define: {
+          global: "globalThis",
+        },
+      },
+    },
     resolve: {
       alias: {
         "@": path.resolve("src"),
