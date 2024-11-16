@@ -12,7 +12,7 @@ const ChatbotChatRoom = {
   name: "Talk to Chatbot",
   lastMessage: "Hello everyone!",
   lastActivityAt: new Date().toISOString(),
-  participantsCount: 5,
+  participantsCount: 1,
   unreadCount: 3,
   avatarUrl: "https://ui-avatars.com/api/?name=General&background=random",
 
@@ -30,37 +30,27 @@ const Chat: React.FC = () => {
     ChatbotChatRoom,
   ]);
 
-  const [messages, setMessages] = React.useState<Map<string, DecodedMessage[]>>(
-    new Map()
-  );
-
-  const { signMessageAsync } = useSignMessage();
-  const aaSigner: Signer = {
-    getAddress: () => accountAddress,
-    signMessage: async (message: string) => {
-      return signMessageAsync({ message });
-    },
-    // these methods are required for smart contract wallets
-    // block number is optional
-    getBlockNumber: () => undefined,
-    // this example uses the Base chain
-    getChainId: () => BigInt(8453),
-  };
-
-  // this value should be generated once per installation and stored securely
-  const encryptionKey = window.crypto.getRandomValues(new Uint8Array(32));
-  console.log("encryptionKey", encryptionKey);
-
-  const { address: accountAddress } = useAccount();
-
   useEffect(() => {
-    const list = pushUser?.chat.list("CHATS");
-    list?.then((res) => {
-      console.log("res", res);
-    });
+    (async () => {
+      const list = await pushUser?.chat.list("CHATS");
 
-    setConversations(list);
-    console.log("list", list);
+      console.log("list", list);
+      const rooms = list?.map((chat) => {
+        return {
+          id: chat.chatId,
+          name: chat.groupInformation?.groupName,
+          participantsCount: chat.groupInformation?.members.length,
+          avatarUrl: chat.groupInformation?.groupImage,
+        };
+      });
+
+      console.log("rooms", rooms);
+      if (rooms) {
+        setConversations([ChatbotChatRoom, ...rooms]);
+      }
+
+      console.log("list", list);
+    })();
   }, [pushUser]);
 
   // This would typically come from an API
