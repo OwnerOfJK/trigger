@@ -28,6 +28,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        console.log("Initializing Push user");
         const user = await PushAPI.initialize(walletClient, {
           env: ENV.DEV,
           alpha: { feature: ["SCALABILITY_V2"] },

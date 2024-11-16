@@ -7,15 +7,13 @@ import {
 
 import "./index.css";
 import Header from "@/components/shared/Header";
-import { ChatProvider } from "@/components/utils/ChatProvider";
+
 export function Layout(props: PropsWithChildren) {
   return (
-    <ChatProvider>
-      <div className="min-h-screen w-full flex flex-col">
-        <Header />
-        <div>{props.children}</div>
-      </div>
-    </ChatProvider>
+    <div className="min-h-screen w-full flex flex-col">
+      <Header />
+      <div>{props.children}</div>
+    </div>
   );
 }
 
