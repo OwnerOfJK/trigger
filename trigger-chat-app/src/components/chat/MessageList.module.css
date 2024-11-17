@@ -15,8 +15,9 @@
 }
 
 .botMessage {
-  background-color: #f0f0f0;
+  background-color: #d4d4d4;
   align-self: flex-start;
+  color: #000;
   border-bottom-left-radius: 4px;
 }
 

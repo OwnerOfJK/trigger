@@ -31,16 +31,6 @@ function ChatbotPage() {
       </div>
       <div className="bg-white border-t p-4">
         <ChatInput onSend={handleSendMessage} disabled={isLoading} />
-        {isConnected && (
-          <div className="mt-2 flex justify-end">
-            <button
-              onClick={handleTransfer}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-            >
-              Pay
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

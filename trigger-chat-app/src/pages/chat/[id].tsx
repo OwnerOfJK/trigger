@@ -39,21 +39,24 @@ function ChatRoom() {
       console.log("id", id, pushUser);
       const history = await pushUser?.chat.history(id);
       console.log("history", history);
-      const messages = history.map((hi) => {
-        return {
-          id: hi.messageObj.cid,
-          content: hi.messageObj.content,
-          sender: {
-            id: hi.fromDID,
-            name: hi.fromDID,
-            avatar: `https://ui-avatars.com/api/?name=${hi.fromDID
-              .split(":")[1]
-              .slice(2, 4)}&background=0D8ABC`,
-          },
-          timestamp: new Date(hi.timestamp),
-          status: "sent",
-        };
-      });
+      const messages = history
+        .map((hi) => {
+          return {
+            id: hi.messageObj.cid,
+            content: hi.messageObj.content,
+            sender: {
+              id: hi.fromDID,
+              name: hi.fromDID,
+              avatar: `https://ui-avatars.com/api/?name=${hi.fromDID
+                .split(":")[1]
+                .slice(2, 4)}&background=0D8ABC`,
+            },
+            timestamp: new Date(hi.timestamp),
+            status: "sent",
+          };
+        })
+        .reverse();
+
       setMessages(messages);
     };
 
@@ -117,17 +120,18 @@ function ChatRoom() {
         id: Date.now().toString(),
         content: newMessage,
         sender: {
-          id: pushUser?.account, // Current user
+          id: `id:${pushUser?.account}`, // Current user
           name: pushUser?.account,
-          avatar: `https://ui-avatars.com/api/?name=${pushUser?.account
-            .split(":")[1]
-            .slice(2, 4)}&background=0D8ABC`,
+          avatar: `https://ui-avatars.com/api/?name=${pushUser?.account.slice(
+            2,
+            4
+          )}&background=0D8ABC`,
         },
         timestamp: new Date(),
         status: "sent",
       };
 
-      setMessages((prev) => [message, ...prev]);
+      setMessages((prev) => [...prev, message]);
       setNewMessage("");
     },
     [id, newMessage, pushUser]
@@ -193,10 +197,6 @@ function ChatRoom() {
           >
             Send
           </button>
-
-          <div className="flex-center mt-12px">
-            <button onClick={transfer}>Pay</button>
-          </div>
         </div>
       </form>
     </div>
