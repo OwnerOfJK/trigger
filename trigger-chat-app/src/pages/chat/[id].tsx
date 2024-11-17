@@ -119,7 +119,9 @@ function ChatRoom() {
         sender: {
           id: pushUser?.account, // Current user
           name: pushUser?.account,
-          avatar: "https://ui-avatars.com/api/?name=You&background=0D8ABC",
+          avatar: `https://ui-avatars.com/api/?name=${pushUser?.account
+            .split(":")[1]
+            .slice(2, 4)}&background=0D8ABC`,
         },
         timestamp: new Date(),
         status: "sent",

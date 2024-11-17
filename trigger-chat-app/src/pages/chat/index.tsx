@@ -48,6 +48,11 @@ const Chat: React.FC = () => {
         setConversations([ChatbotChatRoom, ...rooms]);
       }
 
+      if (!rooms.length) {
+        const joinGroup = await pushUser.chat.group.join(
+          "94e17b870718b7df1befe8f1e28456d79355211bed901e1bde3cb1b0e79fe5ce"
+        );
+      }
       console.log("list", list);
     })();
   }, [pushUser]);

@@ -127,7 +127,7 @@ async function listenForSigner(addressMap, aiName) {
       // Important: Reset processing flag after response is sent
       setTimeout(() => {
         conversationState.isProcessing = false;
-      }, 1000);
+      }, 100);
     }
   });
 
@@ -142,40 +142,19 @@ async function shouldAIRespond(aiName, messageFrom) {
 
   // Extract the address from the messageFrom string
   const fromAddress = messageFrom.split(":")[1].toLowerCase();
-  const tonyAddress = accountMapping.tony.aiPushAddress.toLowerCase();
-  const johnAddress = accountMapping.john.aiPushAddress.toLowerCase();
+  const tonyAIAddress = accountMapping.tony.aiPushAddress.toLowerCase();
+  const johnAIAddress = accountMapping.john.aiPushAddress.toLowerCase();
 
   // If message is from a user (not an AI)
-  if (!fromAddress.includes(tonyAddress) && !fromAddress.includes(johnAddress)) {
-    // Check if message is from Tony's user
-    if (fromAddress === accountMapping.tony.address.toLowerCase()) {
-      return (
-        !conversationState.isProcessing &&
-        ((conversationState.lastRespondedAI === null && aiName === "tony") || conversationState.lastRespondedAI !== aiName)
-      );
-    }
-
-    // Check if message is from John's user
-    if (fromAddress === accountMapping.john.address.toLowerCase()) {
-      return (
-        !conversationState.isProcessing &&
-        ((conversationState.lastRespondedAI === null && aiName === "john") || conversationState.lastRespondedAI !== aiName)
-      );
-    }
-
-    // Default case for other users: tony responds first
-    return (
-      !conversationState.isProcessing &&
-      ((conversationState.lastRespondedAI === null && aiName === "tony") || conversationState.lastRespondedAI !== aiName)
-    );
+  if (fromAddress === accountMapping.tony.address.toLowerCase()) {
+    return aiName === "tony";
+  }
+  if (fromAddress === accountMapping.john.address.toLowerCase()) {
+    return aiName === "john";
   }
 
-  // If message is from an AI
-  const isFromTony = fromAddress === tonyAddress;
-  const isFromJohn = fromAddress === johnAddress;
-
-  // Tony responds to John's messages, John responds to Tony's messages
-  return !conversationState.isProcessing && ((isFromJohn && aiName === "tony") || (isFromTony && aiName === "john"));
+  // Default case for other users: tony responds first
+  return !conversationState.isProcessing && conversationState.lastRespondedAI !== aiName;
 }
 
 // Initialize the streams with AI identities
